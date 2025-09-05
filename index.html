@@ -1,857 +1,138 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Claude AI Suite - Powered by Puter.js</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #5B4FE9;
-            --primary-dark: #4A3FD8;
-            --secondary: #1E1B4B;
-            --accent: #F97316;
-            --bg-primary: #0F0E1C;
-            --bg-secondary: #1A1929;
-            --bg-chat: #252336;
-            --text-primary: #FFFFFF;
-            --text-secondary: #A8A6C1;
-            --border: #3A3850;
-            --success: #10B981;
-            --error: #EF4444;
-            --warning: #F59E0B;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--secondary) 100%);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header */
-        .header {
-            background: rgba(26, 25, 41, 0.95);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid var(--border);
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .controls {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-        }
-
-        .model-selector {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .model-selector:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 10px rgba(91, 79, 233, 0.3);
-        }
-
-        /* Main Container */
-        .container {
-            flex: 1;
-            display: flex;
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 2rem;
-            gap: 2rem;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            width: 280px;
-            background: rgba(26, 25, 41, 0.8);
-            border-radius: 1rem;
-            padding: 1.5rem;
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .sidebar h3 {
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            margin-bottom: 0.5rem;
-        }
-
-        .conversation-list {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .conversation-item {
-            padding: 0.75rem;
-            background: var(--bg-secondary);
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 1px solid transparent;
-        }
-
-        .conversation-item:hover {
-            border-color: var(--primary);
-            transform: translateX(5px);
-        }
-
-        .conversation-item.active {
-            background: var(--primary);
-            border-color: var(--primary);
-        }
-
-        .new-chat-btn {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            border: none;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-        }
-
-        .new-chat-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(91, 79, 233, 0.4);
-        }
-
-        /* Chat Area */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: rgba(37, 35, 54, 0.8);
-            border-radius: 1rem;
-            border: 1px solid var(--border);
-            backdrop-filter: blur(10px);
-            overflow: hidden;
-        }
-
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-        }
-
-        .message {
-            display: flex;
-            gap: 1rem;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 0.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .message.user .message-avatar {
-            background: linear-gradient(135deg, var(--accent) 0%, #EA580C 100%);
-        }
-
-        .message.assistant .message-avatar {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-        }
-
-        .message-content {
-            flex: 1;
-            background: var(--bg-secondary);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            border: 1px solid var(--border);
-        }
-
-        .message.user .message-content {
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(234, 88, 12, 0.1) 100%);
-            border-color: rgba(249, 115, 22, 0.3);
-        }
-
-        .message-content pre {
-            background: var(--bg-primary);
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-            margin: 1rem 0;
-            border: 1px solid var(--border);
-        }
-
-        .message-content code {
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-            font-size: 0.875rem;
-        }
-
-        /* Input Area */
-        .input-area {
-            padding: 1.5rem;
-            background: var(--bg-secondary);
-            border-top: 1px solid var(--border);
-        }
-
-        .input-container {
-            display: flex;
-            gap: 1rem;
-            align-items: flex-end;
-        }
-
-        .input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        #message-input {
-            width: 100%;
-            background: var(--bg-primary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 1rem;
-            border-radius: 0.75rem;
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 50px;
-            max-height: 150px;
-            transition: all 0.3s;
-        }
-
-        #message-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(91, 79, 233, 0.2);
-        }
-
-        .send-btn {
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 0.75rem;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .send-btn:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(91, 79, 233, 0.4);
-        }
-
-        .send-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        /* Features Panel */
-        .features {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-
-        .feature-btn {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .feature-btn:hover {
-            border-color: var(--primary);
-            transform: translateX(-5px);
-            box-shadow: 0 3px 15px rgba(91, 79, 233, 0.3);
-        }
-
-        /* Loading Animation */
-        .loading {
-            display: flex;
-            gap: 0.25rem;
-            padding: 0.5rem 0;
-        }
-
-        .loading span {
-            width: 8px;
-            height: 8px;
-            background: var(--primary);
-            border-radius: 50%;
-            animation: bounce 1.4s infinite ease-in-out both;
-        }
-
-        .loading span:nth-child(1) { animation-delay: -0.32s; }
-        .loading span:nth-child(2) { animation-delay: -0.16s; }
-
-        @keyframes bounce {
-            0%, 80%, 100% {
-                transform: scale(0);
-                opacity: 0.5;
-            }
-            40% {
-                transform: scale(1);
-                opacity: 1;
-            }
-        }
-
-        /* Stats Display */
-        .stats {
-            position: fixed;
-            top: 5rem;
-            right: 2rem;
-            background: rgba(26, 25, 41, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 0.75rem;
-            padding: 1rem;
-            min-width: 200px;
-        }
-
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.5rem 0;
-            color: var(--text-secondary);
-            font-size: 0.875rem;
-        }
-
-        .stat-value {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container {
-                flex-direction: column;
-                padding: 1rem;
-            }
-
-            .sidebar {
-                width: 100%;
-                order: 2;
-            }
-
-            .chat-area {
-                order: 1;
-            }
-
-            .features, .stats {
-                display: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Chat Claude Illimitata</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: #1a1a2e;
+      color: #ececec;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      padding: 1rem;
+      background: #16213e;
+      text-align: center;
+      font-size: 1.25rem;
+    }
+    #chat {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+    }
+    .message {
+      margin-bottom: 1rem;
+      display: flex;
+    }
+    .message.user .bubble {
+      background: #0f3460;
+      margin-left: auto;
+    }
+    .message.assistant .bubble {
+      background: #53354a;
+      margin-right: auto;
+    }
+    .bubble {
+      padding: 0.75rem;
+      border-radius: 1rem;
+      max-width: 70%;
+      line-height: 1.4;
+    }
+    #input-area {
+      display: flex;
+      border-top: 1px solid #0f3460;
+    }
+    #prompt {
+      flex: 1;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: none;
+      background: #16213e;
+      color: #ececec;
+    }
+    #prompt:focus {
+      outline: none;
+    }
+    #send {
+      padding: 0 1rem;
+      background: #53354a;
+      border: none;
+      color: #ececec;
+      cursor: pointer;
+    }
+    #send:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <div class="logo">
-            <span>🤖</span>
-            <span>Claude AI Suite</span>
-        </div>
-        <div class="controls">
-            <select id="model-select" class="model-selector">
-                <option value="claude-sonnet-4">Claude Sonnet 4 (Veloce)</option>
-                <option value="claude-opus-4">Claude Opus 4 (Potente)</option>
-                <option value="claude-3-7-sonnet">Claude 3.7 Sonnet</option>
-                <option value="claude-3-7-opus">Claude 3.7 Opus</option>
-            </select>
-            <button onclick="toggleTheme()" class="feature-btn">🌙</button>
-        </div>
-    </div>
 
-    <!-- Main Container -->
-    <div class="container">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <button class="new-chat-btn" onclick="newConversation()">
-                <span>➕</span>
-                <span>Nuova Chat</span>
-            </button>
-            <h3>Conversazioni</h3>
-            <div class="conversation-list" id="conversation-list">
-                <!-- Le conversazioni verranno aggiunte qui dinamicamente -->
-            </div>
-        </div>
+  <header>Chat Claude Illimitata</header>
+  <div id="chat"></div>
 
-        <!-- Chat Area -->
-        <div class="chat-area">
-            <div class="messages-container" id="messages-container">
-                <!-- I messaggi verranno aggiunti qui -->
-            </div>
-            <div class="input-area">
-                <div class="input-container">
-                    <div class="input-wrapper">
-                        <textarea 
-                            id="message-input" 
-                            placeholder="Scrivi un messaggio..."
-                            rows="1"
-                        ></textarea>
-                    </div>
-                    <button class="send-btn" id="send-btn" onclick="sendMessage()">
-                        <span>Invia</span>
-                        <span>➤</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div id="input-area">
+    <input id="prompt" type="text" placeholder="Scrivi un messaggio…" />
+    <button id="send">Invia</button>
+  </div>
 
-    <!-- Features Panel -->
-    <div class="features">
-        <button class="feature-btn" onclick="exportChat()">
-            💾 Esporta
-        </button>
-        <button class="feature-btn" onclick="clearChat()">
-            🗑️ Pulisci
-        </button>
-        <button class="feature-btn" onclick="showStats()">
-            📊 Statistiche
-        </button>
-    </div>
+  <!-- SDK Puter.js -->
+  <script src="https://js.puter.com/v2/"></script>
+  <script>
+    const chatEl = document.getElementById('chat');
+    const promptEl = document.getElementById('prompt');
+    const sendBtn = document.getElementById('send');
 
-    <!-- Stats Display -->
-    <div class="stats" id="stats" style="display: none;">
-        <div class="stat-item">
-            <span>Messaggi Totali:</span>
-            <span class="stat-value" id="total-messages">0</span>
-        </div>
-        <div class="stat-item">
-            <span>Tokens Utilizzati:</span>
-            <span class="stat-value" id="total-tokens">0</span>
-        </div>
-        <div class="stat-item">
-            <span>Modello Attivo:</span>
-            <span class="stat-value" id="active-model">-</span>
-        </div>
-    </div>
+    // Mostra un messaggio nella chat
+    function addMessage(text, role) {
+      const container = document.createElement('div');
+      container.className = 'message ' + role;
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      bubble.textContent = text;
+      container.appendChild(bubble);
+      chatEl.appendChild(container);
+      chatEl.scrollTop = chatEl.scrollHeight;
+    }
 
-    <!-- Puter.js SDK -->
-    <script src="https://js.puter.com/v2/"></script>
-    
-    <script>
-        // Stato Applicazione
-        let conversations = JSON.parse(localStorage.getItem('conversations')) || [];
-        let currentConversationId = null;
-        let messageCount = 0;
-        let tokenCount = 0;
-        let isProcessing = false;
+    // Invia il messaggio e riceve risposta in streaming
+    async function sendMessage() {
+      const text = promptEl.value.trim();
+      if (!text) return;
+      promptEl.value = '';
+      sendBtn.disabled = true;
+      addMessage(text, 'user');
 
-        // Inizializzazione
-        document.addEventListener('DOMContentLoaded', () => {
-            initializeApp();
-            setupEventListeners();
-            loadConversations();
-            
-            if (conversations.length === 0) {
-                newConversation();
-            } else {
-                loadConversation(conversations[0].id);
-            }
-        });
+      const responseStream = await puter.ai.chat(text, {
+        model: 'claude-sonnet-4',
+        stream: true
+      });
 
-        // Setup Event Listeners
-        function setupEventListeners() {
-            const input = document.getElementById('message-input');
-            
-            // Auto-resize textarea
-            input.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = Math.min(this.scrollHeight, 150) + 'px';
-            });
+      let assistantText = '';
+      addMessage('…', 'assistant');
+      const lastBubble = chatEl.querySelector('.message.assistant:last-child .bubble');
 
-            // Invio con Ctrl+Enter
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && e.ctrlKey) {
-                    e.preventDefault();
-                    sendMessage();
-                }
-            });
+      for await (const chunk of responseStream) {
+        if (chunk.text) {
+          assistantText += chunk.text;
+          lastBubble.textContent = assistantText;
+          chatEl.scrollTop = chatEl.scrollHeight;
         }
+      }
 
-        // Inizializza App
-        function initializeApp() {
-            console.log('Claude AI Suite inizializzata con Puter.js');
-            updateStats();
-        }
+      sendBtn.disabled = false;
+    }
 
-        // Nuova Conversazione
-        function newConversation() {
-            const id = Date.now().toString();
-            const conversation = {
-                id,
-                title: `Chat ${new Date().toLocaleDateString('it-IT')}`,
-                messages: [],
-                createdAt: new Date().toISOString()
-            };
-            
-            conversations.unshift(conversation);
-            currentConversationId = id;
-            saveConversations();
-            loadConversations();
-            clearMessages();
-        }
-
-        // Carica Conversazioni
-        function loadConversations() {
-            const list = document.getElementById('conversation-list');
-            list.innerHTML = '';
-            
-            conversations.forEach(conv => {
-                const item = document.createElement('div');
-                item.className = 'conversation-item';
-                if (conv.id === currentConversationId) {
-                    item.classList.add('active');
-                }
-                item.innerHTML = `
-                    <div style="font-weight: 600;">${conv.title}</div>
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                        ${conv.messages.length} messaggi
-                    </div>
-                `;
-                item.onclick = () => loadConversation(conv.id);
-                list.appendChild(item);
-            });
-        }
-
-        // Carica Conversazione
-        function loadConversation(id) {
-            currentConversationId = id;
-            const conversation = conversations.find(c => c.id === id);
-            if (!conversation) return;
-            
-            clearMessages();
-            conversation.messages.forEach(msg => {
-                displayMessage(msg.content, msg.role, false);
-            });
-            
-            loadConversations();
-        }
-
-        // Invia Messaggio
-        async function sendMessage() {
-            if (isProcessing) return;
-            
-            const input = document.getElementById('message-input');
-            const message = input.value.trim();
-            if (!message) return;
-            
-            isProcessing = true;
-            const sendBtn = document.getElementById('send-btn');
-            sendBtn.disabled = true;
-            
-            // Aggiungi messaggio utente
-            displayMessage(message, 'user');
-            saveMessage(message, 'user');
-            input.value = '';
-            input.style.height = 'auto';
-            
-            // Mostra indicatore di caricamento
-            const loadingDiv = displayLoading();
-            
-            try {
-                const model = document.getElementById('model-select').value;
-                
-                // Ottieni contesto conversazione
-                const conversation = conversations.find(c => c.id === currentConversationId);
-                const context = conversation.messages.slice(-10).map(m => 
-                    `${m.role}: ${m.content}`
-                ).join('\n');
-                
-                // Prepara prompt con contesto
-                const fullPrompt = context ? 
-                    `Contesto precedente:\n${context}\n\nUtente: ${message}\n\nRispondi in italiano:` : 
-                    `${message}\n\nRispondi in italiano:`;
-                
-                // Chiama Claude tramite Puter.js
-                const response = await puter.ai.chat(
-                    fullPrompt,
-                    { 
-                        model: model,
-                        stream: true
-                    }
-                );
-                
-                // Rimuovi indicatore di caricamento
-                loadingDiv.remove();
-                
-                // Crea div per risposta streaming
-                const responseDiv = document.createElement('div');
-                responseDiv.className = 'message assistant';
-                responseDiv.innerHTML = `
-                    <div class="message-avatar">C</div>
-                    <div class="message-content"></div>
-                `;
-                document.getElementById('messages-container').appendChild(responseDiv);
-                const contentDiv = responseDiv.querySelector('.message-content');
-                
-                let fullResponse = '';
-                
-                // Streaming risposta
-                for await (const part of response) {
-                    if (part?.text) {
-                        fullResponse += part.text;
-                        contentDiv.textContent = fullResponse;
-                        scrollToBottom();
-                    }
-                }
-                
-                // Salva risposta
-                saveMessage(fullResponse, 'assistant');
-                
-                // Aggiorna titolo conversazione se è il primo messaggio
-                if (conversation.messages.length === 2) {
-                    conversation.title = message.substring(0, 50) + (message.length > 50 ? '...' : '');
-                    saveConversations();
-                    loadConversations();
-                }
-                
-                // Aggiorna statistiche
-                messageCount++;
-                tokenCount += Math.round(fullResponse.length / 4);
-                updateStats();
-                
-            } catch (error) {
-                loadingDiv.remove();
-                displayMessage(`Errore: ${error.message}`, 'assistant');
-                console.error('Errore Claude:', error);
-            } finally {
-                isProcessing = false;
-                sendBtn.disabled = false;
-            }
-        }
-
-        // Display Message
-        function displayMessage(content, role, save = true) {
-            const container = document.getElementById('messages-container');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}`;
-            
-            const avatar = role === 'user' ? 'U' : 'C';
-            messageDiv.innerHTML = `
-                <div class="message-avatar">${avatar}</div>
-                <div class="message-content">${escapeHtml(content)}</div>
-            `;
-            
-            container.appendChild(messageDiv);
-            scrollToBottom();
-            
-            if (save) {
-                saveMessage(content, role);
-            }
-            
-            messageCount++;
-            updateStats();
-        }
-
-        // Display Loading
-        function displayLoading() {
-            const container = document.getElementById('messages-container');
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'message assistant';
-            loadingDiv.innerHTML = `
-                <div class="message-avatar">C</div>
-                <div class="message-content">
-                    <div class="loading">
-                        <span></span>
-                        <span></span>
-                        <span></span>
-                    </div>
-                </div>
-            `;
-            container.appendChild(loadingDiv);
-            scrollToBottom();
-            return loadingDiv;
-        }
-
-        // Salva Messaggio
-        function saveMessage(content, role) {
-            const conversation = conversations.find(c => c.id === currentConversationId);
-            if (!conversation) return;
-            
-            conversation.messages.push({
-                content,
-                role,
-                timestamp: new Date().toISOString()
-            });
-            
-            saveConversations();
-        }
-
-        // Salva Conversazioni
-        function saveConversations() {
-            localStorage.setItem('conversations', JSON.stringify(conversations));
-        }
-
-        // Clear Messages
-        function clearMessages() {
-            document.getElementById('messages-container').innerHTML = '';
-            messageCount = 0;
-            updateStats();
-        }
-
-        // Clear Chat
-        function clearChat() {
-            if (confirm('Vuoi davvero cancellare questa conversazione?')) {
-                const conversation = conversations.find(c => c.id === currentConversationId);
-                if (conversation) {
-                    conversation.messages = [];
-                    saveConversations();
-                    clearMessages();
-                }
-            }
-        }
-
-        // Export Chat
-        function exportChat() {
-            const conversation = conversations.find(c => c.id === currentConversationId);
-            if (!conversation || conversation.messages.length === 0) {
-                alert('Nessun messaggio da esportare');
-                return;
-            }
-            
-            const content = conversation.messages
-                .map(m => `[${m.role.toUpperCase()}]: ${m.content}`)
-                .join('\n\n');
-            
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `claude-chat-${conversation.id}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        // Show/Hide Stats
-        function showStats() {
-            const stats = document.getElementById('stats');
-            stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
-            updateStats();
-        }
-
-        // Update Stats
-        function updateStats() {
-            document.getElementById('total-messages').textContent = messageCount;
-            document.getElementById('total-tokens').textContent = tokenCount;
-            document.getElementById('active-model').textContent = 
-                document.getElementById('model-select').selectedOptions[0].text.split(' ')[0];
-        }
-
-        // Toggle Theme
-        function toggleTheme() {
-            document.body.classList.toggle('light-theme');
-        }
-
-        // Scroll to Bottom
-        function scrollToBottom() {
-            const container = document.getElementById('messages-container');
-            container.scrollTop = container.scrollHeight;
-        }
-
-        // Escape HTML
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // Gestione File (Drag & Drop)
-        const messagesContainer = document.getElementById('messages-container');
-        
-        messagesContainer.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            messagesContainer.style.borderColor = 'var(--primary)';
-        });
-
-        messagesContainer.addEventListener('dragleave', (e) => {
-            e.preventDefault();
-            messagesContainer.style.borderColor = 'var(--border)';
-        });
-
-        messagesContainer.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            messagesContainer.style.borderColor = 'var(--border)';
-            
-            const files = Array.from(e.dataTransfer.files);
-            for (const file of files) {
-                if (file.type.startsWith('text/')) {
-                    const text = await file.text();
-                    const input = document.getElementById('message-input');
-                    input.value = `Analizza questo testo:\n\n${text.substring(0, 1000)}...`;
-                    input.style.height = '150px';
-                }
-            }
-        });
-    </script>
+    sendBtn.addEventListener('click', sendMessage);
+    promptEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+  </script>
 </body>
 </html>
