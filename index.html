@@ -3,23 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Chat Claude Illimitata</title>
+  <title>Chat Illimitata con Claude via Puter.js</title>
   <style>
+    :root {
+      --bg: #1a1a2e;
+      --bg-alt: #16213e;
+      --user: #0f3460;
+      --assistant: #53354a;
+      --text: #ececec;
+      --border: #0f3460;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      margin: 0;
-      padding: 0;
       font-family: sans-serif;
-      background: #1a1a2e;
-      color: #ececec;
+      background: var(--bg);
+      color: var(--text);
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
     header {
+      background: var(--bg-alt);
       padding: 1rem;
-      background: #16213e;
       text-align: center;
       font-size: 1.25rem;
+      border-bottom: 1px solid var(--border);
     }
     #chat {
       flex: 1;
@@ -27,43 +35,38 @@
       overflow-y: auto;
     }
     .message {
-      margin-bottom: 1rem;
       display: flex;
+      margin-bottom: 1rem;
     }
-    .message.user .bubble {
-      background: #0f3460;
-      margin-left: auto;
-    }
-    .message.assistant .bubble {
-      background: #53354a;
-      margin-right: auto;
-    }
+    .message.user { justify-content: flex-end; }
+    .message.assistant { justify-content: flex-start; }
     .bubble {
+      max-width: 70%;
       padding: 0.75rem;
       border-radius: 1rem;
-      max-width: 70%;
       line-height: 1.4;
     }
+    .message.user .bubble { background: var(--user); }
+    .message.assistant .bubble { background: var(--assistant); }
     #input-area {
       display: flex;
-      border-top: 1px solid #0f3460;
+      border-top: 1px solid var(--border);
+      background: var(--bg-alt);
     }
     #prompt {
       flex: 1;
       padding: 0.75rem;
       font-size: 1rem;
       border: none;
-      background: #16213e;
-      color: #ececec;
+      background: var(--bg-alt);
+      color: var(--text);
     }
-    #prompt:focus {
-      outline: none;
-    }
+    #prompt:focus { outline: none; }
     #send {
       padding: 0 1rem;
-      background: #53354a;
+      background: var(--assistant);
       border: none;
-      color: #ececec;
+      color: var(--text);
       cursor: pointer;
     }
     #send:disabled {
@@ -73,23 +76,20 @@
   </style>
 </head>
 <body>
-
-  <header>Chat Claude Illimitata</header>
+  <header>Chat Illimitata: Claude via Puter.js</header>
   <div id="chat"></div>
-
   <div id="input-area">
     <input id="prompt" type="text" placeholder="Scrivi un messaggio…" />
     <button id="send">Invia</button>
   </div>
 
-  <!-- SDK Puter.js -->
+  <!-- Puter.js SDK -->
   <script src="https://js.puter.com/v2/"></script>
   <script>
     const chatEl = document.getElementById('chat');
     const promptEl = document.getElementById('prompt');
     const sendBtn = document.getElementById('send');
 
-    // Mostra un messaggio nella chat
     function addMessage(text, role) {
       const container = document.createElement('div');
       container.className = 'message ' + role;
@@ -101,7 +101,6 @@
       chatEl.scrollTop = chatEl.scrollHeight;
     }
 
-    // Invia il messaggio e riceve risposta in streaming
     async function sendMessage() {
       const text = promptEl.value.trim();
       if (!text) return;
@@ -109,24 +108,30 @@
       sendBtn.disabled = true;
       addMessage(text, 'user');
 
-      const responseStream = await puter.ai.chat(text, {
+      // Streaming response
+      const stream = await puter.ai.chat(text, {
         model: 'claude-sonnet-4',
         stream: true
       });
 
       let assistantText = '';
-      addMessage('…', 'assistant');
+      addMessage('', 'assistant');
       const lastBubble = chatEl.querySelector('.message.assistant:last-child .bubble');
 
-      for await (const chunk of responseStream) {
-        if (chunk.text) {
-          assistantText += chunk.text;
-          lastBubble.textContent = assistantText;
-          chatEl.scrollTop = chatEl.scrollHeight;
+      try {
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            assistantText += chunk.text;
+            lastBubble.textContent = assistantText;
+            chatEl.scrollTop = chatEl.scrollHeight;
+          }
         }
+      } catch (err) {
+        lastBubble.textContent = 'Errore nella risposta';
+        console.error(err);
+      } finally {
+        sendBtn.disabled = false;
       }
-
-      sendBtn.disabled = false;
     }
 
     sendBtn.addEventListener('click', sendMessage);
