@@ -259,33 +259,16 @@
             padding: 0.5rem 1rem;
             font-size: 0.875rem;
             color: var(--text-secondary);
-            z-index: 1000;
         }
 
-        .status.ready { border-color: var(--success); color: var(--success); }
+        .status.connected { border-color: var(--success); color: var(--success); }
         .status.error { border-color: var(--error); color: var(--error); }
-        .status.processing { border-color: var(--warning); color: var(--warning); }
-        .status.loading { border-color: var(--primary); color: var(--primary); }
-
-        .debug-info {
-            position: fixed;
-            bottom: 1rem;
-            left: 1rem;
-            background: rgba(26, 25, 41, 0.95);
-            border: 1px solid var(--border);
-            border-radius: 0.5rem;
-            padding: 0.5rem 1rem;
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            font-family: monospace;
-            max-width: 300px;
-        }
+        .status.ready { border-color: var(--primary); color: var(--primary); }
 
         @media (max-width: 768px) {
             .container { padding: 1rem; }
             .header { padding: 1rem; flex-direction: column; gap: 1rem; }
             .controls { order: -1; }
-            .debug-info { display: none; }
         }
     </style>
 </head>
@@ -297,15 +280,15 @@
         </div>
         <div class="controls">
             <select id="model-select" class="model-selector">
-                <option value="claude-3-5-sonnet-20241022">Claude 3.5 Sonnet</option>
-                <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
-                <option value="claude-3-opus-20240229">Claude 3 Opus</option>
+                <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                <option value="claude-opus-4">Claude Opus 4</option>
+                <option value="claude-3-7-sonnet">Claude 3.7 Sonnet</option>
+                <option value="claude-3-7-opus">Claude 3.7 Opus</option>
             </select>
         </div>
     </div>
 
-    <div class="status" id="status">Caricamento Puter.js...</div>
-    <div class="debug-info" id="debug-info">Debug: Inizializzazione...</div>
+    <div class="status" id="status">Inizializzazione...</div>
 
     <div class="container">
         <div class="chat-area">
@@ -322,10 +305,9 @@
                             id="message-input" 
                             placeholder="Scrivi un messaggio..."
                             rows="1"
-                            disabled
                         ></textarea>
                     </div>
-                    <button class="send-btn" id="send-btn" onclick="sendMessage()" disabled>
+                    <button class="send-btn" id="send-btn" onclick="sendMessage()">
                         <span>Invia</span>
                         <span>➤</span>
                     </button>
@@ -334,13 +316,10 @@
         </div>
     </div>
 
-    <!-- Carica Puter.js -->
-    <script src="https://js.puter.com/v2/"></script>
-    
     <script>
         let isProcessing = false;
         let messageCount = 0;
-        let puterReady = false;
+        let puterInitialized = false;
 
         // Elementi DOM
         const messagesContainer = document.getElementById('messages-container');
@@ -348,95 +327,64 @@
         const sendBtn = document.getElementById('send-btn');
         const modelSelect = document.getElementById('model-select');
         const status = document.getElementById('status');
-        const debugInfo = document.getElementById('debug-info');
 
-        // Debug logging
-        function debug(message) {
-            console.log('[Claude Chat]', message);
-            debugInfo.textContent = `Debug: ${message}`;
-        }
-
-        // Inizializzazione quando il DOM è pronto
-        document.addEventListener('DOMContentLoaded', async () => {
-            debug('DOM caricato, inizializzazione...');
-            setupEventListeners();
-            await initializePuter();
-        });
-
-        async function initializePuter() {
+        // Carica Puter.js dinamicamente e inizializza
+        async function loadPuter() {
             try {
-                debug('Inizializzazione Puter...');
-                updateStatus('loading', 'Inizializzazione Puter...');
+                updateStatus('loading', 'Caricamento Puter.js...');
                 
-                // Attendi che Puter sia disponibile
+                // Carica lo script
+                await loadScript('https://js.puter.com/v2/');
+                
+                // Attendi che puter sia disponibile
                 let attempts = 0;
-                const maxAttempts = 100;
+                const maxAttempts = 50;
                 
                 while (!window.puter && attempts < maxAttempts) {
-                    debug(`Tentativo ${attempts + 1}/${maxAttempts}`);
-                    await sleep(100);
+                    await new Promise(resolve => setTimeout(resolve, 100));
                     attempts++;
                 }
                 
                 if (!window.puter) {
-                    throw new Error('Puter.js non caricato dopo 10 secondi');
+                    throw new Error('Puter.js non è stato caricato correttamente');
                 }
                 
-                debug('Puter.js caricato, verifica funzionalità AI...');
-                
-                // Verifica se l'API AI è disponibile
-                if (!puter.ai) {
-                    throw new Error('puter.ai non disponibile');
+                // Inizializza Puter
+                if (window.puter.init) {
+                    await window.puter.init();
                 }
                 
-                debug('API AI disponibile');
-                
-                // Test di base
-                updateStatus('loading', 'Test connessione AI...');
-                
-                try {
-                    // Prova a fare una chiamata di test molto semplice
-                    const testResponse = await puter.ai.chat('Ciao', {
-                        model: 'claude-3-5-sonnet-20241022',
-                        max_tokens: 10
-                    });
-                    
-                    debug('Test API riuscito');
-                    puterReady = true;
-                    enableChat();
-                    updateStatus('ready', 'Pronto per chattare!');
-                    
-                } catch (testError) {
-                    debug(`Errore test API: ${testError.message}`);
-                    // Anche se il test fallisce, proviamo a abilitare la chat
-                    puterReady = true;
-                    enableChat();
-                    updateStatus('ready', 'Pronto (modalità sperimentale)');
-                }
+                puterInitialized = true;
+                updateStatus('ready', 'Pronto per chattare');
                 
             } catch (error) {
-                debug(`Errore inizializzazione: ${error.message}`);
-                console.error('Errore inizializzazione Puter:', error);
-                updateStatus('error', `Errore: ${error.message}`);
+                console.error('Errore durante il caricamento di Puter.js:', error);
+                updateStatus('error', 'Errore di inizializzazione: ' + error.message);
                 
-                // Mostra messaggio di errore nella chat
+                // Fallback: mostra un messaggio all'utente
                 displayMessage(
-                    `Errore durante l'inizializzazione: ${error.message}\n\nPotrebbe essere necessario ricaricare la pagina o verificare la connessione.`,
+                    "Mi dispiace, c'è stato un problema nel caricare il sistema. Riprova a ricaricare la pagina.", 
                     'assistant'
                 );
             }
         }
 
-        function enableChat() {
-            messageInput.disabled = false;
-            sendBtn.disabled = false;
-            messageInput.placeholder = 'Scrivi un messaggio...';
-            debug('Chat abilitata');
+        // Funzione helper per caricare script esterni
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
         }
 
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+        // Inizializzazione
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+            loadPuter();
+        });
 
         function setupEventListeners() {
             // Auto-resize textarea
@@ -450,13 +398,6 @@
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     sendMessage();
-                }
-            });
-
-            // Cambio modello
-            modelSelect.addEventListener('change', () => {
-                if (puterReady) {
-                    updateStatus('ready', `Pronto - ${modelSelect.selectedOptions[0].text}`);
                 }
             });
         }
@@ -479,22 +420,6 @@
             messagesContainer.appendChild(messageDiv);
             scrollToBottom();
             messageCount++;
-        }
-
-        function displayStreamingMessage(role) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${role}`;
-            messageDiv.id = 'streaming-message';
-            
-            const avatar = role === 'user' ? 'U' : 'C';
-            messageDiv.innerHTML = `
-                <div class="message-avatar">${avatar}</div>
-                <div class="message-content" id="streaming-content"></div>
-            `;
-            
-            messagesContainer.appendChild(messageDiv);
-            scrollToBottom();
-            return messageDiv;
         }
 
         function displayLoading() {
@@ -524,16 +449,19 @@
         }
 
         async function sendMessage() {
-            if (isProcessing || !puterReady) return;
+            if (isProcessing) return;
             
             const message = messageInput.value.trim();
             if (!message) return;
             
+            if (!puterInitialized) {
+                updateStatus('error', 'Sistema non ancora pronto');
+                return;
+            }
+            
             isProcessing = true;
             sendBtn.disabled = true;
             updateStatus('processing', 'Elaborazione...');
-            
-            debug(`Invio messaggio: "${message.substring(0, 50)}..."`);
             
             // Mostra il messaggio utente
             displayMessage(message, 'user');
@@ -545,97 +473,64 @@
             
             try {
                 const model = modelSelect.value;
-                debug(`Usando modello: ${model}`);
                 
-                // Prova diverse configurazioni per la chiamata API
-                let response;
-                
-                try {
-                    // Configurazione 1: con streaming
-                    response = await puter.ai.chat(message, {
-                        model: model,
-                        stream: true,
-                        max_tokens: 4000
-                    });
-                } catch (streamError) {
-                    debug(`Streaming fallito: ${streamError.message}, provo senza streaming`);
-                    
-                    // Configurazione 2: senza streaming
-                    response = await puter.ai.chat(message, {
-                        model: model,
-                        stream: false,
-                        max_tokens: 4000
-                    });
-                }
+                // Chiama Claude tramite Puter.js
+                const response = await window.puter.ai.chat(message, { 
+                    model: model,
+                    stream: false // Iniziamo senza streaming per semplicità
+                });
                 
                 removeLoading();
                 
-                // Gestione risposta streaming
-                if (response && typeof response[Symbol.asyncIterator] === 'function') {
-                    debug('Risposta streaming ricevuta');
-                    const streamingDiv = displayStreamingMessage('assistant');
-                    const contentDiv = streamingDiv.querySelector('#streaming-content');
-                    
-                    let fullResponse = '';
-                    
-                    for await (const chunk of response) {
-                        if (chunk && chunk.text) {
-                            fullResponse += chunk.text;
-                            contentDiv.textContent = fullResponse;
-                            scrollToBottom();
-                        }
-                    }
-                    
-                    debug(`Risposta completa ricevuta: ${fullResponse.length} caratteri`);
-                } else {
-                    // Gestione risposta non-streaming
-                    debug('Risposta non-streaming ricevuta');
-                    let responseText = '';
-                    
-                    if (typeof response === 'string') {
-                        responseText = response;
-                    } else if (response && response.message && response.message.content) {
+                let responseText = '';
+                
+                // Gestisci diversi formati di risposta
+                if (response && typeof response === 'object') {
+                    if (response.message?.content?.[0]?.text) {
                         responseText = response.message.content[0].text;
-                    } else if (response && response.content) {
+                    } else if (response.content?.[0]?.text) {
                         responseText = response.content[0].text;
-                    } else if (response && response.text) {
+                    } else if (response.text) {
                         responseText = response.text;
+                    } else if (response.response) {
+                        responseText = response.response;
                     } else {
-                        debug('Formato risposta sconosciuto:', response);
-                        responseText = 'Risposta ricevuta ma in formato non riconosciuto.';
+                        console.log('Risposta ricevuta:', response);
+                        responseText = 'Mi dispiace, ho ricevuto una risposta in formato non riconosciuto.';
                     }
-                    
-                    displayMessage(responseText, 'assistant');
+                } else if (typeof response === 'string') {
+                    responseText = response;
+                } else {
+                    console.log('Risposta ricevuta:', response);
+                    responseText = 'Mi dispiace, non sono riuscito a elaborare la risposta.';
                 }
                 
-                updateStatus('ready', 'Pronto per chattare!');
-                debug('Messaggio completato con successo');
+                displayMessage(responseText, 'assistant');
+                updateStatus('ready', 'Pronto per chattare');
                 
             } catch (error) {
-                debug(`Errore durante l'invio: ${error.message}`);
                 console.error('Errore durante la chiamata a Claude:', error);
                 removeLoading();
                 
                 let errorMessage = 'Mi dispiace, si è verificato un errore durante la comunicazione.';
                 
-                if (error.message.includes('API key') || error.message.includes('authentication')) {
-                    errorMessage = 'Errore di autenticazione con Puter.js. Riprova più tardi.';
-                } else if (error.message.includes('rate limit')) {
-                    errorMessage = 'Limite di richieste raggiunto. Riprova tra qualche minuto.';
-                } else if (error.message.includes('network') || error.message.includes('fetch')) {
-                    errorMessage = 'Errore di connessione. Verifica la tua connessione internet.';
-                } else {
-                    errorMessage = `Errore: ${error.message}`;
+                if (error.message) {
+                    if (error.message.includes('API key')) {
+                        errorMessage = 'Errore di autenticazione. Verifica la configurazione dell\'API key.';
+                    } else if (error.message.includes('rate limit')) {
+                        errorMessage = 'Limite di richieste raggiunto. Riprova tra qualche minuto.';
+                    } else {
+                        errorMessage = `Errore: ${error.message}`;
+                    }
                 }
                 
                 displayMessage(errorMessage, 'assistant');
-                updateStatus('error', 'Errore di comunicazione');
+                updateStatus('error', 'Errore di connessione');
                 
             } finally {
                 isProcessing = false;
                 sendBtn.disabled = false;
                 scrollToBottom();
-                debug('Processo messaggio completato');
             }
         }
 
@@ -648,6 +543,13 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // Gestione cambio modello
+        modelSelect.addEventListener('change', () => {
+            if (puterInitialized) {
+                updateStatus('ready', `Modello: ${modelSelect.selectedOptions[0].text}`);
+            }
+        });
     </script>
 </body>
 </html>
